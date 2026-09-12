@@ -151,7 +151,7 @@ function enableCam(event) {
 
     webcamRunning = true;
     enableWebcamButton.style.display = "none";
-    instruction.innerText = "Tunjuk untuk buat bubble, buka telapak untuk pecahin! ✨";
+    instruction.innerText = "Tunjuk untuk buat bubble, buka telapak untuk pecahin!";
 
     const constraints = { video: { width: 1280, height: 720, facingMode: "user" } };
 
@@ -221,16 +221,28 @@ function predictWebcam() {
 
     if (results && results.landmarks) {
         for (const landmarks of results.landmarks) {
+            // MENGGAMBAR KERANGKA TANGAN SECARA MANUAL (SANGAT CEPAT)
+            // Menggantikan DrawingUtils bawaan yang lambat dan memakan banyak CPU
+            canvasCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            canvasCtx.lineWidth = 2;
+            canvasCtx.beginPath();
+            for (const connection of HandLandmarker.HAND_CONNECTIONS) {
+                const start = landmarks[connection.start];
+                const end = landmarks[connection.end];
+                canvasCtx.moveTo(start.x * canvasElement.width, start.y * canvasElement.height);
+                canvasCtx.lineTo(end.x * canvasElement.width, end.y * canvasElement.height);
+            }
+            canvasCtx.stroke();
 
-            drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, {
-                color: "rgba(255, 255, 255, 0.4)",
-                lineWidth: 2
-            });
-            drawingUtils.drawLandmarks(landmarks, { 
-                color: "rgba(255, 255, 255, 0.8)", 
-                lineWidth: 1, 
-                radius: 3 
-            });
+            canvasCtx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            canvasCtx.beginPath();
+            for (const lm of landmarks) {
+                const px = lm.x * canvasElement.width;
+                const py = lm.y * canvasElement.height;
+                canvasCtx.moveTo(px + 3, py);
+                canvasCtx.arc(px, py, 3, 0, 2 * Math.PI);
+            }
+            canvasCtx.fill();
 
             if (isOpenHand(landmarks)) {
                 openHand = true;
@@ -266,7 +278,7 @@ function predictWebcam() {
         instruction.innerText = "Spawning Bubbles... 🫧";
         instruction.style.color = "#a1c4fd";
     } else {
-        instruction.innerText = "Tunjuk untuk buat bubble, buka telapak untuk pecahin! ✨";
+        instruction.innerText = "Tunjuk untuk buat bubble, buka telapak untuk pecahin!";
         instruction.style.color = "white";
     }
 
